@@ -1,7 +1,7 @@
 import FormData from 'form-data';
 import { normalizeStringBooleanLikeInput } from '../utils/normalizeStringBooleanLikeInput';
-import { HttpClient } from './../http-client';
-import { D4SignCredentials } from './../interface/d4sign';
+import { HttpClient } from '../http-client';
+import { D4SignCredentials } from '../interface/d4sign';
 import {
   DocumentAddHighlightInput,
   DocumentAddHighlightOutput,
@@ -28,9 +28,11 @@ import {
   DocumentUploadAttachmentInput,
   DocumentUploadAttachmentOutput,
   DocumentUploadInput,
-  DocumentUploadOutput
-} from './../interface/document';
-import { HttpClientRequestProps, Method } from './../interface/http-client';
+  DocumentUploadOutput,
+  DocumentWebHookCreateInput,
+  DocumentWebHookCreateOutput,
+} from '../interface/document';
+import { HttpClientRequestProps, Method } from '../interface/http-client';
 
 export class Document {
   /**
@@ -93,7 +95,7 @@ export class Document {
    * @link https://docapi.d4sign.com.br/docs/endpoints-2#post-documentsuuid-safeupload
    */
   async upload(props: DocumentUploadInput): Promise<DocumentUploadOutput> {
-    const { file, uuid_safe, uuid_folder } = props;
+    const { file, file_name, uuid_safe, uuid_folder } = props;
 
     const request: HttpClientRequestProps = {
       credentials: this.credentials,
@@ -106,7 +108,7 @@ export class Document {
     };
     const body = new FormData();
     if (uuid_folder) body.append('uuid_folder', uuid_folder);
-    body.append('file', file);
+    body.append('file', file, file_name);
     request.body = body;
     return this.http.resolve<DocumentUploadOutput>(request);
   }
@@ -122,7 +124,7 @@ export class Document {
   async uploadAttachment(
     props: DocumentUploadAttachmentInput,
   ): Promise<DocumentUploadAttachmentOutput> {
-    const { document, file } = props;
+    const { document, file, file_name } = props;
     const request: HttpClientRequestProps = {
       credentials: this.credentials,
       method: Method.Post,
@@ -133,7 +135,7 @@ export class Document {
       },
     };
     const body = new FormData();
-    body.append('file', file);
+    body.append('file', file, file_name);
     request.body = body;
     return this.http.resolve<DocumentUploadAttachmentOutput>(request);
   }
@@ -150,7 +152,7 @@ export class Document {
     };
 
     const data = await this.http.resolve<DocumentListTemplatesUnparsedOutput>(request);
-    return Array.from(Object.values(data))
+    return Array.from(Object.values(data));
   }
 
   /**
@@ -239,14 +241,14 @@ export class Document {
    * @link https://docapi.d4sign.com.br/docs/endpoints-2#postdocumentsuuid-documentcancel
    */
   async cancel(props: DocumentCancelInput): Promise<DocumentCancelOutput> {
-    const { comment, uuid_document } = props
+    const { comment, uuid_document } = props;
     const request: HttpClientRequestProps = {
       credentials: this.credentials,
       method: Method.Post,
       endpoint: `/documents/${uuid_document}/cancel`,
       body: {
-        comment
-      }
+        comment,
+      },
     };
     return this.http.resolve<DocumentCancelOutput>(request);
   }
@@ -258,16 +260,18 @@ export class Document {
    * @param props.language  (optional) pt | en
    * @link https://docapi.d4sign.com.br/docs/endpoints-2#postdocumentsuuid-documentdownload
    */
-  async generateDownloadLink(props: DocumentGenerateDownloadLinkInput): Promise<DocumentGenerateDownloadLinkOutput> {
-    const { language, type, uuid_document } = props
+  async generateDownloadLink(
+    props: DocumentGenerateDownloadLinkInput,
+  ): Promise<DocumentGenerateDownloadLinkOutput> {
+    const { language, type, uuid_document } = props;
     const request: HttpClientRequestProps = {
       credentials: this.credentials,
       method: Method.Post,
       endpoint: `/documents/${uuid_document}/download`,
       body: {
         language,
-        type
-      }
+        type,
+      },
     };
     return this.http.resolve<DocumentGenerateDownloadLinkOutput>(request);
   }
@@ -280,15 +284,15 @@ export class Document {
    * @link https://docapi.d4sign.com.br/docs/endpoints-2#postdocumentsuuid-documentresend
    */
   async resendToSigner(props: DocumentResendToSignerInput): Promise<DocumentResendToSignerOutput> {
-    const { email, key_signer, uuid_document } = props
+    const { email, key_signer, uuid_document } = props;
     const request: HttpClientRequestProps = {
       credentials: this.credentials,
       method: Method.Post,
       endpoint: `/documents/${uuid_document}/resend`,
       body: {
         key_signer,
-        email
-      }
+        email,
+      },
     };
     return this.http.resolve<DocumentResendToSignerOutput>(request);
   }
@@ -299,10 +303,10 @@ export class Document {
    * @param props.email E-mail do signatário cadastrado
    * @param props.key_signer id do signer
    * @param props.text Cláusula que será destacada
-   * @link https://docapi.d4sign.com.br/docs/endpoints-2#postdocumentsuuid-documentaddhighlight 
+   * @link https://docapi.d4sign.com.br/docs/endpoints-2#postdocumentsuuid-documentaddhighlight
    */
   async addHighlight(props: DocumentAddHighlightInput): Promise<DocumentAddHighlightOutput> {
-    const { email, key_signer, uuid_document, text } = props
+    const { email, key_signer, uuid_document, text } = props;
     const request: HttpClientRequestProps = {
       credentials: this.credentials,
       method: Method.Post,
@@ -310,16 +314,34 @@ export class Document {
       body: {
         key_signer,
         email,
-        text
-      }
+        text,
+      },
     };
     return this.http.resolve<DocumentAddHighlightOutput>(request);
+  }
+  /**
+   * Cadastra um webhook para o documento
+   * @param props.uuid_document (required) ID do documento
+   * @param props.url
+   * @link https://docapi.d4sign.com.br/docs/cadastrar-webhook-em-um-documento
+   */
+  async addWebhook(props: DocumentWebHookCreateInput): Promise<DocumentWebHookCreateOutput> {
+    const { uuid_document, url } = props;
+    const request: HttpClientRequestProps = {
+      credentials: this.credentials,
+      method: Method.Post,
+      endpoint: `/documents/${uuid_document}/webhooks`,
+      body: {
+        url,
+      },
+    };
+    return this.http.resolve<DocumentWebHookCreateOutput>(request);
   }
 
   static createInstance(http: HttpClient, credentials: D4SignCredentials) {
     return new Document(http, credentials);
   }
-  private constructor(private http: HttpClient, private credentials: D4SignCredentials) { }
+  private constructor(private http: HttpClient, private credentials: D4SignCredentials) {}
 
   private static decodeStatus(status: DocumentStatus) {
     switch (status) {

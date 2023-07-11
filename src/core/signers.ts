@@ -1,13 +1,13 @@
 import { HttpClientRequestProps, Method } from '../interface/http-client';
 import { normalizeStringBooleanLikeInput } from '../utils/normalizeStringBooleanLikeInput';
-import { HttpClient } from './../http-client';
-import { D4SignCredentials } from './../interface/d4sign';
+import { HttpClient } from '../http-client';
+import { D4SignCredentials } from '../interface/d4sign';
 import {
   SignerCreateManyActDecode,
   SignerCreateManyInput,
   SignerCreateManyInputAct,
   SignerCreateOutput
-} from './../interface/signers';
+} from '../interface/signers';
 
 export class Signers {
   /**
@@ -38,6 +38,19 @@ export class Signers {
       },
     };
     return this.http.resolve<SignerCreateOutput>(request);
+  }
+  /**
+   * @param uuid_document (required) ID do documento
+   * Esse objeto lista todos os signatários desse documento
+   * @link https://docapi.d4sign.com.br/docs/endpoints-1#postdocumentsuuid-documentcreatelist
+   */
+  async list(uuid_document: String): Promise<Object> {
+    const request: HttpClientRequestProps = {
+      credentials: this.credentials,
+      method: Method.Get,
+      endpoint: `/documents/${uuid_document}/list`,
+    };
+    return this.http.resolve<Object>(request);
   }
 
   static createInstance(http: HttpClient, credentials: D4SignCredentials) {

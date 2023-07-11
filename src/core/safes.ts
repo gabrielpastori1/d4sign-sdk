@@ -11,7 +11,7 @@ import {
   SafesFolderRenameInput,
   SafesFolderRenameOutput,
 } from '../interface/safes';
-import { SafesListOutput } from './../interface/safes';
+import { SafesListOutput } from '../interface/safes';
 
 /** Cofres */
 export class Safes {

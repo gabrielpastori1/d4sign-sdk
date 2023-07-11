@@ -59,6 +59,7 @@ export interface DocumentListByStatusOutput {
 export interface DocumentUploadInput {
   uuid_safe: string; // ID do cofre
   file: Buffer;
+  file_name?: string;
   uuid_folder?: string;
 }
 
@@ -69,6 +70,7 @@ export interface DocumentUploadOutput {
 export interface DocumentUploadAttachmentInput {
   document: string; // ID do cofre
   file: Buffer;
+  file_name?: string;
 }
 export interface DocumentUploadAttachmentOutput {
   message: string;
@@ -176,4 +178,12 @@ export interface DocumentAddHighlightOutput {
   email: string
   key_signer: string
   text: string
+}
+
+export interface DocumentWebHookCreateInput {
+  uuid_document: string
+  url: string
+}
+export interface DocumentWebHookCreateOutput {
+  message: string
 }
